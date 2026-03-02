@@ -814,8 +814,8 @@ class HillModel:
     def __init__(self):
         self._EMPTY_CHAR = "|"
         self.alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ" + self._EMPTY_CHAR
-        self._alphabet_size = len(self.alphabet)-1
-        self._MIN_GENERATED_NUMBER = -10
+        self._alphabet_size = len(self.alphabet)
+        self._MIN_GENERATED_NUMBER = 0
         self._MAX_GENERATED_NUMBER = 10
 
         self.text_long = None
@@ -824,24 +824,12 @@ class HillModel:
         self.num_of_added_symbols = None
 
     def get_alphabet(self):
-        return self.alphabet[:-1]
+        return self.alphabet
 
     def test_input(self):
         """проверяет введенные данные на корректность"""
         pass
-        # # TEST
-        # # TEST_OPEN_KEY_MATRIX = [[i for _ in range(3)] for i in range(3) ]
-        # TEST_MATRIX_KEY = [[9, 9, 1],[6, 1, 3],[5, 4, 1]]
-        # TEST_CLOSED_TEXT = "КЖЁАГВТДЭ"
-        # # TEST_ENCRYPHER = self.encrypher("АБВГДЕЖ", TEST_MATRIX_KEY)
-        #
-        # # print(self.multiplyer(TEST_CODERED_TEXT,TEST_MATRIX_KEY, len(TEST_MATRIX_KEY)))
-        # print()
-        # print()
-        # # print(TEST_ENCRYPHER)
-        # print(self.decripher(TEST_CLOSED_TEXT, TEST_MATRIX_KEY))
-        #
-        # # print(self.multiplyer(TEST_CODERED_TEXT,TESE_MATRIX_KEY, 4))
+
 
     def coder(self, text: str):
         """Переводит последовательность букв в последовательность
@@ -977,12 +965,12 @@ class HillModel:
         before_module = before_module[:key_long]
         moduled_answer = moduled_answer[:key_long]
         how_to_multiple = []
-        first_piece_of_text = codered_open_text[:self.key_long]
+        first_piece_of_text = codered_open_text.split()[:self.key_long]
         for row in range(len(key)):
             create_new_row = []
-            for column in range(len(key)):
+            for column in range(key_long):
                 create_new_row.append(f"{key[row][column]} * {first_piece_of_text[column]}")
-            new_row = str( f'{"+".join(create_new_row)} = {before_module[row]}; {before_module[row]}mod(32) = {moduled_answer[row]}')
+            new_row = str( f'{"+".join(create_new_row)} = {round(before_module[row])}; {round(before_module[row])}mod(33) = {moduled_answer[row]}')
             how_to_multiple.append([new_row])
         return how_to_multiple
 
@@ -1125,9 +1113,9 @@ class HillView:
         text1 = ttk.Label(self.study_inf_frame, text="Открытый текст представляет собой n-мерный вектор. Ключ – "
                                                   "квадратная матрица размера n x n. Для получения шифротекста ключ "
                                                   "умножается на открытый текст по модулю выбранной числовой схемы,"
-                                                  " в случае латинского алфавита - 26."
-                                                  "Пусть \"p1p2p3\" – открытый текст, ключ – матрица размера 3 x 3 и "
-                                                  "шифротекст – вектор размерности – 3, \"c1c2c3\" соответственно. "
+                                                  " в данном случае - 32, или 33 с допольнительным символом."
+                                                  "Пусть \"p₁ p₂ p₃\" – открытый текст, ключ – матрица размера 3 x 3 и "
+                                                  "шифротекст – вектор размерности – 3, \"с₁ с₂ с₃\" соответственно. "
                                                   "В матричном виде эта система описывается так:", wraplength=800)
         text1.pack()
 
@@ -1142,6 +1130,9 @@ class HillView:
 
         codered_open_text_widget = tk.Label(self.coder_frame, text=codered_open_text)
         codered_open_text_widget.grid(row=0, column=2)
+
+        text2 = tk.Label(self.study_inf_frame, text="Далее шифрование идет по чанкам. Текст разбивается на чанки длинной, равной длине ключа. Если текст не делится ровно, то используются добавочные символы. Например добавочным символом будет '|', тогда его номер будет 33.", wraplength=800)
+        text2.pack()
 
         self.multipler_frame = ttk.Frame(self.study_inf_frame)
         self.multipler_frame.pack()
@@ -1171,8 +1162,7 @@ class HillView:
 
 
 
-        # vertical_codered_text_data = codered_open_text.split()[:key_long]
-        vertical_codered_text_data = codered_open_text.split()
+        vertical_codered_text_data = [[i] for i in codered_open_text.split()[:key_long]]
 
         codered_closed_text_vertical = self.create_table(self.example_multipler_frame, vertical_codered_text_data, len(vertical_codered_text_data), 1)
         codered_closed_text_vertical.grid(row=0, column=2)
@@ -1181,22 +1171,21 @@ class HillView:
         multipler_sighn.grid(row=0, column=1)
 
         key_table = self.create_table(self.example_multipler_frame,
-                                             key,len(key), len(key))
-        key_table.grid(row=0, column=1)
+                                             key,key_long, key_long)
+        key_table.grid(row=0, column=0)
 
         equal_sighn = ttk.Label(self.example_multipler_frame, text="=")
         equal_sighn.grid(row=0, column=3)
 
-        vertical_closed_text_data = codered_closed_text.split()
-        # vertical_closed_text_data = codered_closed_text.split()[:key_long]
+        vertical_closed_text_data =[[i] for i in codered_closed_text.split()[:key_long]]
 
         codered_closed_text_vertical = self.create_table(self.example_multipler_frame,
                                              vertical_closed_text_data,len(vertical_closed_text_data), 1)
 
         codered_closed_text_vertical.grid(row=0, column=4)
 
-        text2 = ttk.Label(self.study_inf_frame, text="Или в качестве системы уравнений:")
-        text2.pack()
+        text3 = ttk.Label(self.study_inf_frame, text="Или в качестве системы уравнений:")
+        text3.pack()
 
         frame_how_to_multiple = ttk.Frame(self.study_inf_frame)
         frame_how_to_multiple.pack()
@@ -1205,19 +1194,14 @@ class HillView:
         example_how_to_multiple_table.grid(row=0, column=0)
 
         how_to_multiple_table = self.create_table(frame_how_to_multiple,
-                          how_to_multiple,key_long, 1, 200)
+                          how_to_multiple,key_long, 1, 400)
         how_to_multiple_table.grid(row=0, column=1)
 
-        text3 = ttk.Label(self.study_inf_frame,text="Из уравнений видно, что каждый символ открытого текста участвует "
+        text4 = ttk.Label(self.study_inf_frame,text="Из уравнений видно, что каждый символ открытого текста участвует "
                                                     "в шифровании шифротекста. Именно поэтому шифр Хилла принадлежит "
                                                     "к категории блочных шифров.\nТеперь декодирует результат, "
-                                                    "переведя по таблице обратно для получения результата. Так как текст"
-                                                    " может быть длинее ключа, его можно разбить на части и "
-                                                    "провести процедуру с каждой частью отдельно, а в результате"
-                                                    " обьеденить зашифрованные части в одну, в случае если длина "
-                                                    "текста не делится ровно на длину ключа - к открытому тексту"
-                                                    " добавляются символы", wraplength=800)
-        text3.pack()
+                                                    "переведя по таблице обратно для получения результата.", wraplength=800)
+        text4.pack()
 
         self.decoder_frame = ttk.Frame(self.study_inf_frame)
         self.decoder_frame.pack()
@@ -1310,6 +1294,9 @@ class HillController:
             closed_text, codered_closed_text,alphabet, codered_open_text, key_long = self.model.encrypher(open_text, key)
             how_to_multiple_table = self.model.create_data_for_how_to_multiple(key, codered_open_text, codered_closed_text, key_long)
             self.view.set_result_text(closed_text)
+
+            for child in self.view.study_inf_frame.winfo_children():
+                child.destroy()
             self.view.create_study_inf_frame_encrypt(key_long, alphabet, open_text, codered_open_text, key,how_to_multiple_table, " ".join([str(i) for i in codered_closed_text[1]]), closed_text)
 
 

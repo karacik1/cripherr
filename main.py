@@ -83,31 +83,10 @@ class ListOfCoders(MainApp):
         test.grid(row=0, column=1)
 
 
-
-    # здесь общие функции
-    # def change_filling(self, filling,frame, is_created=True):
-    #     if is_created:
-    #         self.matrix.destroy()
-    #
-    #     self.matrix = Sheet(frame,
-    #                         data=filling,
-    #                         show_header=False,
-    #                         show_x_scrollbar=False,
-    #                         show_y_scrollbar=False,
-    #                         show_row_index=False,
-    #                         column_width=25,
-    #                         row_width=25,
-    #                         width=25 * len(filling[0]),
-    #                         height=26 * (len(filling)),
-    #                         empty_horizontal=0,
-    #                         empty_vertical=0)
-    #     self.matrix.hide("y_scrollbar")
-        # self.matrix.grid(row=2, column=0, rowspan=3) в скитале
-
 class CausersCipher(ListOfCoders):
     def __init__(self, parent):
         self.infFrame = parent
-        # super().__init__(parent)
+        self.is_decoder = 1
 
 
 
@@ -157,8 +136,12 @@ class CausersCipher(ListOfCoders):
         self.label_of_open_text.insert(1.1, self.open_text)
         self.label_of_open_text.pack()
 
-        self.translate_text = ttk.Button(self.infFrame, text="Конвертировать", command=self.coder)
+        self.translate_text = ttk.Button(self.infFrame, text="Шифровать", command=self.coder)
         self.translate_text.pack()
+
+        self.translate_text = ttk.Button(self.infFrame, text="Расшифровать", command=self.decoder)
+        self.translate_text.pack()
+
 
         # создание поля для закрытого текста с базовым текстом
         self.closed_text = ""
@@ -166,8 +149,14 @@ class CausersCipher(ListOfCoders):
         self.label_of_closed_text.pack()
 
     # шифровщик
+    def decoder(self):
+        self.is_decoder = -1
+        self.coder()
+        self.is_decoder = 1
+
     def coder(self):
         self.closed_text = ""
+        self.value *= self.is_decoder
         full_original_alphabet = ['А', 'а', 'Б', 'б', 'В', 'в', 'Г', 'г', 'Д', 'д', 'Е', 'е', 'Ё', 'ё', 'Ж', 'ж', 'З',
                                   'з', 'И', 'и', 'Й', 'й', 'К', 'к', 'Л', 'л', 'М', 'м', 'Н', 'н', 'О', 'о', 'П', 'п',
                                   'Р', 'р',  'С', 'с', 'Т', 'т', 'У', 'у', 'Ф', 'ф', 'Х', 'х', 'Ц', 'ц', 'Ч', 'ч', 'Ш',
@@ -183,12 +172,6 @@ class CausersCipher(ListOfCoders):
         self.label_of_closed_text.delete(1.0, END)
         self.label_of_closed_text.insert(1.0, self.closed_text)
 
-    # дешифратор. вероятно нужно отрисовать еще одну кнопку для дешифровки. или рассмотреть возможность с той же
-    # кнопкой
-    def decoder(self):
-        pass
-
-    # обновление данных таблицы ///попробовать сделать через конфигуратор обновление данных
     def draw_shift(self):
         self.alphabet.insert("", END, values=self.codered_alphabet)
         self.alphabet.delete(self.alphabet.get_children()[1])
@@ -198,6 +181,8 @@ class CausersCipher(ListOfCoders):
         self.value = self.shiftNumber.get() % 33
         self.codered_alphabet = self.original_alphabet[self.value:]+self.original_alphabet[:self.value]
         self.draw_shift()
+
+
 
 class CardanosGrid(ListOfCoders):
     def __init__(self, parent):
@@ -614,6 +599,7 @@ class SkitalaView:
         self.closed_text_widget = None
         self.row_number = None
         self.column_number = None
+        self.studing_frame = None
 
         # Callback-функции
         self.on_encrypt = None
@@ -621,31 +607,37 @@ class SkitalaView:
 
         self.create_widgets()
 
+        self._MAX_CLOUMN_AND_ROW_NUMBER = 20
+
     def create_widgets(self) -> None:
             self.create_header()
             self.create_text_widgets()
             self.create_controls()
 
             # создает базовую матрицу
+
             self.change_filling(self._DEFAULT_DATA)
+            self.studing_frame = tk.Frame(self.infFrame)
+            self.studing_frame.pack()
+
 
 
     def create_header(self) -> None:
-        ttk.Label(self.infFrame, text="Шифр Цезаря").grid(column=0, row=0, columnspan=2)
+        ttk.Label(self.infFrame, text="Шифр Цезаря").pack()
 
         history_inf = ttk.Label(self.infFrame, text="Шифр Цезаря, также известный как шифр сдвига или код Цезаря"
                                                     " — разновидность шифра подстановки, в котором каждый символ в"
                                                     " открытом тексте заменяется символом, находящимся на некотором "
                                                     "постоянном числе позиций левее или правее него в алфавите.",
                                 wraplength=400)
-        history_inf.grid(column=0, row=1, columnspan=2)
+        history_inf.pack()
 
     def create_controls(self) -> None:
         table_size_text_widget = tk.Label(self.infFrame, text="Размер решетки:")
-        table_size_text_widget.grid(column=1, row=3)
+        table_size_text_widget.pack()
 
         size_frame = tk.Frame(self.infFrame)
-        size_frame.grid(column=1, row=4)
+        size_frame.pack()
 
         self.row_number = IntVar(value=self._DEFAULT_ROW)
         row_number_widget = tk.Entry(size_frame, textvariable=self.row_number, width=5)
@@ -667,23 +659,88 @@ class SkitalaView:
     def create_text_widgets(self) -> None:
         # открытый текст
         self.open_text_widget = Text(self.infFrame, height=10, width=60)
-        # self.open_text_widget.bind("<KeyRelease>", self.enter_text)
-        self.open_text_widget.grid(column=1, row=2)
+        self.open_text_widget.pack()
+
+        self.error_text = StringVar()
+        error_widget = ttk.Label(self.infFrame, textvariable=self.error_text, foreground="red", wraplength=300)
+        error_widget.pack()
 
         # закрытый текст
         self.closed_text_widget = tk.Text(self.infFrame, height=10)
-        # self.closed_text_widget.bind("<KeyRelease>", self.enter_text)
-        self.closed_text_widget.grid(column=0, row=5, columnspan=2)
+        self.closed_text_widget.pack()
+    def create_decrypht_studinng_inf(self, data, closed_text, open_text, rows, columns):
+
+
+        text1 = tk.Label(self.studing_frame, text="Для начала значение закрытого текста вносится в таблицу по строчкам. "
+                                             "Сверху вниз, с право на лево. ",wraplength=400)
+        text1.grid(column =0, row=0, columnspan=3)
+
+        table_horisontal = self.create_table(data, self.studing_frame)
+        table_horisontal.highlight_rows(rows=0, bg="blue", fg="white")
+        table_horisontal.grid(column=0, row=1)
+
+        closed_text_widget = tk.Label(self.studing_frame, text=closed_text[:columns], bg="blue", fg="white")
+        closed_text_widget.grid(column=1, row=1, sticky=E)
+        closed_text_widget = tk.Label(self.studing_frame, text=closed_text[columns:])
+        closed_text_widget.grid(column=2, row=1, sticky=W)
+
+
+        text2 = tk.Label(self.studing_frame, text="Для получения расшифрованного текста достаточно считать текст по столбикам, "
+                                             "а не строчкам")
+        text2.grid(column =0, row=2, columnspan=3)
+
+
+        table_vertical = self.create_table(data, self.studing_frame)
+        table_vertical.highlight_columns(columns=0, bg="dark green", fg="white")
+        table_vertical.grid(column=0, row=3)
+
+        open_text_widget = tk.Label(self.studing_frame, text=open_text[:rows], bg="dark green", fg="white")
+        open_text_widget.grid(column=1, row=3, sticky=E)
+        open_text_widget_nohighlighted = tk.Label(self.studing_frame, text=open_text[rows:])
+        open_text_widget_nohighlighted.grid(column=2, row=3, sticky=W)
+
+    def create_studinng_inf(self, data, open_text, closed_text, rows, columns):
+        self.studing_frame=tk.Frame(self.infFrame)
+        self.studing_frame.pack()
+
+        text1 = tk.Label(self.studing_frame, text="Для начала значение открытого текста вносится в таблицу по столбикам. "
+                                             "Сверху вниз, справо на лево. Это самый простой вид шифрования. "
+                                             "Для улучшения криптостойкости можно менять порядок заполнения или "
+                                             "столбики и строчки местами",wraplength=400)
+        text1.grid(column =0, row=0, columnspan=3)
+
+        table_vertical = self.create_table(data, self.studing_frame)
+        table_vertical.highlight_columns(columns=0,bg="dark green", fg="white")
+        table_vertical.grid(column=0, row=1)
+
+        open_text_widget = tk.Label(self.studing_frame, text = open_text[:rows],bg="dark green", fg="white")
+        open_text_widget.grid(column=1, row=1, sticky=E)
+        open_text_widget_nohighlighted = tk.Label(self.studing_frame, text=open_text[rows:])
+        open_text_widget_nohighlighted.grid(column=2, row=1, sticky=W)
+
+
+        text2 = tk.Label(self.studing_frame, text="Для получения зашифрованного текста достаточно считать текст по строчкам, "
+                                             "а не столбикам")
+        text2.grid(column =0, row=2, columnspan=3)
+
+        table_horisontal = self.create_table(data, self.studing_frame)
+        table_horisontal.highlight_rows(rows=0,bg="blue", fg="white")
+        table_horisontal.grid(column=0, row=3)
+
+        closed_text_widget = tk.Label(self.studing_frame, text=closed_text[:columns],bg="blue", fg="white")
+        closed_text_widget.grid(column=1, row=3, sticky=E)
+        closed_text_widget = tk.Label(self.studing_frame, text=closed_text[columns:])
+        closed_text_widget.grid(column=2, row=3, sticky=W)
 
     def get_open_text(self) -> str:
-        return self.open_text_widget.get('1.0', 'end-1c')
+        return self.open_text_widget.get('1.0', 'end-1c').lower()
 
     def set_open_text(self, new_open_text: str) -> None:
         self.open_text_widget.delete('1.0', 'end-1c')
         self.open_text_widget.insert('1.0', new_open_text)
 
     def get_closed_text(self) -> str:
-        return self.closed_text_widget.get('1.0', 'end-1c')
+        return self.closed_text_widget.get('1.0', 'end-1c').lower()
 
     def set_closed_text(self, new_open_text: str) -> None:
         self.closed_text_widget.delete('1.0', 'end-1c')
@@ -694,20 +751,24 @@ class SkitalaView:
         if self.matrix is not None:
             self.matrix.destroy()
 
-        self.matrix = Sheet(self.infFrame,
-                            data=filling,
-                            show_header=False,
-                            show_x_scrollbar=False,
-                            show_y_scrollbar=False,
-                            show_row_index=False,
-                            column_width=25,
-                            row_width=25,
-                            width=25 * len(filling[0]),
-                            height=26 * (len(filling)),
-                            empty_horizontal=0,
-                            empty_vertical=0)
-        self.matrix.hide("y_scrollbar")
-        self.matrix.grid(column=0, row=2)
+        self.matrix = self.create_table(filling, self.infFrame)
+        self.matrix.pack()
+
+    def create_table(self, filling, parent):
+        new_table = Sheet(parent,
+              data=filling,
+              show_header=False,
+              show_x_scrollbar=False,
+              show_y_scrollbar=False,
+              show_row_index=False,
+              column_width=25,
+              row_width=25,
+              width=25 * len(filling[0]),
+              height=26 * (len(filling)),
+              empty_horizontal=0,
+              empty_vertical=0)
+        new_table.hide("y_scrollbar")
+        return new_table
 
     def _on_encrypt(self):
         if self.on_encrypt:
@@ -719,6 +780,16 @@ class SkitalaView:
 
     def get_matrix_size(self) -> (int, int):
         return self.column_number.get(), self.row_number.get()
+
+    def error_wrong_symbol_in_text(self, diffrenece: int):
+        self.error_text.set(f"Введенный текст слишком длинный для выбранного размера таблицы, не хватает {diffrenece} "
+                            f"ячеек. Попробуйте увеличить размер таблицы, иначе открытый текст обрежется")
+
+    def error_wrong_text_long(self):
+        self.error_text.set(f"Ваша таблица имеет количество столбцов или строк больше 20, пожалуйста введите значение меньше")
+
+    def delete_error(self):
+        self.error_text.set("")
 
 class SkitalaModel:
     def __init__(self):
@@ -784,14 +855,19 @@ class SkitalaController:
         # Вставляем начальные данные
         self._initialize()
 
+        # константы
+        self._MAX_TABLE_LONG = 20
+
     def _initialize(self) -> None:
         """Инициализация начального состояния."""
-        self.view.set_open_text("ПРИМЕРТЕКСТА")
+        self.view.set_open_text("ПРИМЕР")
 
     def _handle_encrypt(self) -> None:
         """ забирает вводимые данные и передает в шифрование, а потом возвращает """
         open_text = self.view.get_open_text()
         row, columns = self.view.get_matrix_size()
+        if not self.is_long_text_correct(len(open_text), row*columns) or not self.is_table_long_correct(row,columns):
+            return
 
         matrix = self.model.encrypt(open_text, row, columns)
         new_closed_text = self.model.from_matrix_to_string_by_rows(matrix)
@@ -799,16 +875,40 @@ class SkitalaController:
         self.view.set_closed_text(new_closed_text)
         self.view.change_filling(matrix)
 
+        for child in self.view.studing_frame.winfo_children():
+            child.destroy()
+        self.view.create_studinng_inf(matrix, open_text, new_closed_text, row, columns)
+
     def _handle_decrypt(self) -> None:
         """ забирает вводимые данные и передает в дешифрование, а потом возвращает """
         closed_text = self.view.get_closed_text()
         row, columns = self.view.get_matrix_size()
+
+        if not self.is_long_text_correct(len(closed_text), row*columns) or not self.is_table_long_correct(row,columns):
+            return
 
         matrix = self.model.decrypt(closed_text, row, columns)
         new_open_text = self.model.from_matrix_to_string_by_columns(matrix)
 
         self.view.set_open_text(new_open_text)
         self.view.change_filling(matrix)
+
+        for child in self.view.studing_frame.winfo_children():
+            child.destroy()
+        self.view.create_decrypht_studinng_inf(matrix, closed_text, new_open_text, row, columns)
+    def is_long_text_correct(self, text_long: int, table_long: int) -> bool:
+        """проверяет длину текста и выводит ошибку в случае если текст слишком длинный"""
+        if text_long>table_long:
+                self.view.error_wrong_symbol_in_text(text_long-table_long)
+                return False
+        self.view.delete_error()
+        return True
+
+    def is_table_long_correct(self, row, columns):
+        if row > self._MAX_TABLE_LONG or columns > self._MAX_TABLE_LONG:
+            self.view.error_wrong_text_long()
+            return False
+        return True
 
 class HillModel:
     def __init__(self):
@@ -931,14 +1031,16 @@ class HillModel:
         closed_text=self.multiplyer(matrix_of_codered_text, key, number_of_text_parts)
         example_of_closed_text =[np.array(closed_text).ravel().tolist()]
 
+
         closed_text_moduled = self.modul_of_codered_text(closed_text)
         example_of_closed_text.append(np.array(closed_text_moduled).ravel().tolist())
         result = self.decoder(closed_text_moduled)
         return result, example_of_closed_text, self.alphabet, " ".join([str(i) for i in codered_open_text]), self.key_long
 
-    def decrypher(self, closed_text: str, key: list[list[int]]) -> str:
+    def decrypher(self, closed_text: str, key: list[list[int]]):
         self.text_long = len(closed_text)
         self.key_long = len(key)
+
 
         number_of_parts = self.text_long // self.key_long
 
@@ -947,17 +1049,23 @@ class HillModel:
 
         inverse_matrix = np.linalg.inv(key)
         decryphered_text = self.multiplyer(codered_closed_text, inverse_matrix, number_of_parts)
-
+        example_of_closed_text = [np.array(decryphered_text).ravel().tolist()]
         decryphered_text.shape = (number_of_parts, self.key_long)
+
+
         decryphered_text = self.mod(decryphered_text).ravel()
+        example_of_closed_text.append(np.array(decryphered_text).ravel().tolist())
 
         decodered_text = self.decoder(decryphered_text)
+
         added_part_long = decodered_text.count(self._EMPTY_CHAR)
 
         if added_part_long != 0:
-            return decodered_text[:(-1 * added_part_long)]
+            return (decodered_text[:(-1 * added_part_long)], example_of_closed_text,
+                    self.alphabet," ".join([str(i) for i in codered_closed_text]), self.key_long, inverse_matrix)
         else:
-            return decodered_text
+            return (decodered_text, example_of_closed_text, self.alphabet,
+                    " ".join([str(i) for i in codered_closed_text]), self.key_long, inverse_matrix)
 
     def create_data_for_how_to_multiple(self, key, codered_open_text, answer, key_long):
         """подготавливает данные для таблицы 'как умножать'"""
@@ -970,7 +1078,8 @@ class HillModel:
             create_new_row = []
             for column in range(key_long):
                 create_new_row.append(f"{key[row][column]} * {first_piece_of_text[column]}")
-            new_row = str( f'{"+".join(create_new_row)} = {round(before_module[row])}; {round(before_module[row])}mod(33) = {moduled_answer[row]}')
+            new_row = str( f'{"+".join(create_new_row)} = {round(before_module[row])};'
+                           f' {round(before_module[row])}mod(33) = {moduled_answer[row]}')
             how_to_multiple.append([new_row])
         return how_to_multiple
 
@@ -1086,7 +1195,7 @@ class HillView:
         return table
 
 
-    def create_study_inf_frame_encrypt(self,
+    def create_study_inf_frame(self,
                                        key_long,
                                        alphabet,
                                        open_text,
@@ -1096,10 +1205,10 @@ class HillView:
                                        codered_closed_text,
                                        closed_text
                                        ):
-        formula_codered_txt = [['c₁'], ['c₂'], ['c₃']]
+        self.formula_codered_txt = [['c₁'], ['c₂'], ['c₃']]
 
-        formula_key = [i.split() for i in"k₁₁ k₁₂ k₁₃\nk₂₁ k₂₂ k₂₃\nk₃₁ k₃₂ k₃₃".split("\n")]
-        formula_result = [['p₁'], ['p₂'], ['p₃']]
+        self.formula_key = [i.split() for i in"k₁₁ k₁₂ k₁₃\nk₂₁ k₂₂ k₂₃\nk₃₁ k₃₂ k₃₃".split("\n")]
+        self.formula_result = [['p₁'], ['p₂'], ['p₃']]
         how_to_multiple_txt = [[i] for i in "c₁ = k₁₁·p₁ + k₁₂·p₂ + k₁₃·p₃\nc₂ = k₂₁·p₁ + k₂₂·p₂ + k₂₃·p₃\nc₃ = k₃₁·p₁ + k₃₂·p₂ + k₃₃·p₃".split("\n")]
 
         how_to_code_text_widget = Label(self.study_inf_frame,text="Для кирилицы каждой букве сопоставляется число, "
@@ -1119,6 +1228,74 @@ class HillView:
                                                   "В матричном виде эта система описывается так:", wraplength=800)
         text1.pack()
 
+        self.create_coder_word(codered_open_text,open_text)
+
+        text2 = tk.Label(self.study_inf_frame, text="Далее шифрование идет по чанкам. Текст разбивается на чанки длинной, равной длине ключа. Если текст не делится ровно, то используются добавочные символы. Например добавочным символом будет '|', тогда его номер будет 33.", wraplength=800)
+        text2.pack()
+
+        self.create_how_to_multiple_formulas(codered_open_text,key,key_long,codered_closed_text )
+
+        text3 = ttk.Label(self.study_inf_frame, text="Или в качестве системы уравнений:")
+        text3.pack()
+
+        self.create_how_to_multiple_tables(how_to_multiple_txt,how_to_multiple,key_long)
+
+        text4 = ttk.Label(self.study_inf_frame,text="Из уравнений видно, что каждый символ открытого текста участвует "
+                                                    "в шифровании шифротекста. Именно поэтому шифр Хилла принадлежит "
+                                                    "к категории блочных шифров.\nТеперь декодирует результат, "
+                                                    "переведя по таблице обратно для получения результата.", wraplength=800)
+        text4.pack()
+
+        self.create_decoder_word(closed_text, codered_closed_text)
+
+    def create_how_to_multiple_formulas(self,codered_open_text,key, key_long, codered_closed_text):
+        self.multipler_frame = ttk.Frame(self.study_inf_frame)
+        self.multipler_frame.pack()
+
+        self.formula_multipler_frame = ttk.Frame(self.multipler_frame)
+        self.formula_multipler_frame.grid(row=0, column=0)
+
+        self.example_multipler_frame = ttk.Frame(self.multipler_frame)
+        self.example_multipler_frame.grid(row=0, column=1)
+
+        codered_closed_text_vertical_formula = self.create_table(self.formula_multipler_frame, self.formula_codered_txt,
+                                                                 len(self.formula_codered_txt), 1)
+        codered_closed_text_vertical_formula.grid(row=0, column=2)
+
+        multipler_sighn = ttk.Label(self.formula_multipler_frame, text="X")
+        multipler_sighn.grid(row=0, column=1)
+
+        key_table = self.create_table(self.formula_multipler_frame, self.formula_key, key_long, key_long)
+        key_table.grid(row=0, column=0)
+        equal_sighn = ttk.Label(self.formula_multipler_frame, text="=")
+        equal_sighn.grid(row=0, column=3)
+        codered_closed_text_vertical = self.create_table(self.formula_multipler_frame,
+                                                         self.formula_result, len(self.formula_result), 1)
+        codered_closed_text_vertical.grid(row=0, column=4)
+
+        vertical_codered_text_data = [[i] for i in codered_open_text.split()[:key_long]]
+
+        codered_closed_text_vertical = self.create_table(self.example_multipler_frame, vertical_codered_text_data,
+                                                         len(vertical_codered_text_data), 1)
+        codered_closed_text_vertical.grid(row=0, column=2)
+
+        multipler_sighn = ttk.Label(self.example_multipler_frame, text="X")
+        multipler_sighn.grid(row=0, column=1)
+
+        key_table = self.create_table(self.example_multipler_frame,
+                                      key, key_long, key_long)
+        key_table.grid(row=0, column=0)
+
+        equal_sighn = ttk.Label(self.example_multipler_frame, text="=")
+        equal_sighn.grid(row=0, column=3)
+
+        vertical_closed_text_data = [[i] for i in codered_closed_text.split()[:key_long]]
+
+        codered_closed_text_vertical = self.create_table(self.example_multipler_frame,
+                                                         vertical_closed_text_data, len(vertical_closed_text_data), 1)
+
+        codered_closed_text_vertical.grid(row=0, column=4)
+    def create_coder_word(self,codered_open_text,open_text):
         self.coder_frame = ttk.Frame(self.study_inf_frame)
         self.coder_frame.pack()
 
@@ -1130,79 +1307,7 @@ class HillView:
 
         codered_open_text_widget = tk.Label(self.coder_frame, text=codered_open_text)
         codered_open_text_widget.grid(row=0, column=2)
-
-        text2 = tk.Label(self.study_inf_frame, text="Далее шифрование идет по чанкам. Текст разбивается на чанки длинной, равной длине ключа. Если текст не делится ровно, то используются добавочные символы. Например добавочным символом будет '|', тогда его номер будет 33.", wraplength=800)
-        text2.pack()
-
-        self.multipler_frame = ttk.Frame(self.study_inf_frame)
-        self.multipler_frame.pack()
-
-        self.formula_multipler_frame = ttk.Frame(self.multipler_frame)
-        self.formula_multipler_frame.grid(row=0, column=0)
-
-        self.example_multipler_frame = ttk.Frame(self.multipler_frame)
-        self.example_multipler_frame.grid(row=0, column=1)
-
-        codered_closed_text_vertical_formula = self.create_table(self.formula_multipler_frame, formula_codered_txt, len(formula_codered_txt), 1)
-        codered_closed_text_vertical_formula.grid(row=0, column=2)
-
-        multipler_sighn = ttk.Label(self.formula_multipler_frame, text="X")
-        multipler_sighn.grid(row=0, column=1)
-
-        key_table = self.create_table(self.formula_multipler_frame, formula_key, key_long, key_long)
-        key_table.grid(row=0, column=0)
-        equal_sighn = ttk.Label(self.formula_multipler_frame, text="=")
-        equal_sighn.grid(row=0, column=3)
-
-
-        codered_closed_text_vertical = self.create_table(self.formula_multipler_frame,
-                                             formula_result, len(formula_result), 1)
-        codered_closed_text_vertical.grid(row=0, column=4)
-
-
-
-
-        vertical_codered_text_data = [[i] for i in codered_open_text.split()[:key_long]]
-
-        codered_closed_text_vertical = self.create_table(self.example_multipler_frame, vertical_codered_text_data, len(vertical_codered_text_data), 1)
-        codered_closed_text_vertical.grid(row=0, column=2)
-
-        multipler_sighn = ttk.Label(self.example_multipler_frame, text="X")
-        multipler_sighn.grid(row=0, column=1)
-
-        key_table = self.create_table(self.example_multipler_frame,
-                                             key,key_long, key_long)
-        key_table.grid(row=0, column=0)
-
-        equal_sighn = ttk.Label(self.example_multipler_frame, text="=")
-        equal_sighn.grid(row=0, column=3)
-
-        vertical_closed_text_data =[[i] for i in codered_closed_text.split()[:key_long]]
-
-        codered_closed_text_vertical = self.create_table(self.example_multipler_frame,
-                                             vertical_closed_text_data,len(vertical_closed_text_data), 1)
-
-        codered_closed_text_vertical.grid(row=0, column=4)
-
-        text3 = ttk.Label(self.study_inf_frame, text="Или в качестве системы уравнений:")
-        text3.pack()
-
-        frame_how_to_multiple = ttk.Frame(self.study_inf_frame)
-        frame_how_to_multiple.pack()
-
-        example_how_to_multiple_table = self.create_table(frame_how_to_multiple,how_to_multiple_txt, 3, 1, 200)
-        example_how_to_multiple_table.grid(row=0, column=0)
-
-        how_to_multiple_table = self.create_table(frame_how_to_multiple,
-                          how_to_multiple,key_long, 1, 400)
-        how_to_multiple_table.grid(row=0, column=1)
-
-        text4 = ttk.Label(self.study_inf_frame,text="Из уравнений видно, что каждый символ открытого текста участвует "
-                                                    "в шифровании шифротекста. Именно поэтому шифр Хилла принадлежит "
-                                                    "к категории блочных шифров.\nТеперь декодирует результат, "
-                                                    "переведя по таблице обратно для получения результата.", wraplength=800)
-        text4.pack()
-
+    def create_decoder_word(self,closed_text, codered_closed_text):
         self.decoder_frame = ttk.Frame(self.study_inf_frame)
         self.decoder_frame.pack()
 
@@ -1214,6 +1319,16 @@ class HillView:
 
         closed_text_widget = tk.Label(self.decoder_frame, text=codered_closed_text)
         closed_text_widget.grid(row=0, column=0)
+    def create_how_to_multiple_tables(self,how_to_multiple_txt,how_to_multiple,key_long):
+        frame_how_to_multiple = ttk.Frame(self.study_inf_frame)
+        frame_how_to_multiple.pack()
+
+        example_how_to_multiple_table = self.create_table(frame_how_to_multiple, how_to_multiple_txt, 3, 1, 200)
+        example_how_to_multiple_table.grid(row=0, column=0)
+
+        how_to_multiple_table = self.create_table(frame_how_to_multiple,
+                                                  how_to_multiple, key_long, 1, 400)
+        how_to_multiple_table.grid(row=0, column=1)
 
     def event_chose_matrix_size(self, event) -> None:
         """Отрисовывает матрицу правильного размера"""
@@ -1297,7 +1412,8 @@ class HillController:
 
             for child in self.view.study_inf_frame.winfo_children():
                 child.destroy()
-            self.view.create_study_inf_frame_encrypt(key_long, alphabet, open_text, codered_open_text, key,how_to_multiple_table, " ".join([str(i) for i in codered_closed_text[1]]), closed_text)
+            self.view.create_study_inf_frame(key_long, alphabet, open_text, codered_open_text, key,how_to_multiple_table, " ".join([str(i) for i in codered_closed_text[1]]), closed_text)
+
 
 
     def _handle_decrypt(self):
@@ -1305,9 +1421,14 @@ class HillController:
         closed_text = self.view.get_text()
 
         if self.is_correct_data(closed_text,key):
-            open_text = self.model.decrypher(closed_text, key)
-            self.view.set_result_text(open_text)
+            open_text, codered_open_text,alphabet, codered_closed_text, key_long, inversed_matrix  = self.model.decrypher(closed_text, key)
+            how_to_multiple_table = self.model.create_data_for_how_to_multiple(key, codered_closed_text, codered_open_text, key_long)
 
+            self.view.set_result_text(open_text)
+            for child in self.view.study_inf_frame.winfo_children():
+                child.destroy()
+            self.view.create_study_inf_frame(key_long, alphabet, closed_text, codered_closed_text, key, how_to_multiple_table,
+                                             " ".join([str(i) for i in codered_open_text[1]]), open_text)
 
     def _handle_clean_matrix(self):
         self.view.change_matrix_size(int(self.view.matrix_size.get()))
@@ -1342,25 +1463,6 @@ class HillController:
 
         return flat_key.isdigit()
 
-# class HillTestView:
-#     def __init__(self, parent_frame):
-#         self.view = HillView(parent_frame)
-#
-#         alphabet = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
-#         open_text = "открытый текст"
-#         codered_open_text = "1 2 3 4 13"
-#         # vertical_codered_text = codered_open_text.split(" ")
-#         key = [[i for i in range(3)] for _ in range(3)]
-#         how_to_multiple = ["1","2","3"]
-#         codered_closed_text = "13 4 3 2 1"
-#         closed_text = "закрытый текст"
-#         self.view.create_study_inf_frame_encrypt(alphabet,
-#                                                  open_text,
-#                                                  codered_open_text,
-#                                                  key,
-#                                                  how_to_multiple,
-#                                                  codered_closed_text,
-#                                                  closed_text)
 
 
 
